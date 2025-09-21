@@ -53,5 +53,5 @@ def delete_project(project_id):
     projects = [p for p in projects if p["id"] != project_id]
     return jsonify({"message": "Project deleted"})
 
-if __name__ == '__main__':
-    app.run(debug=True)
+#if __name__ == '__main__':
+ #   app.run(debug=True)
