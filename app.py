@@ -1,52 +1,66 @@
-from flask import Flask, jsonify, request
+import streamlit as st
+import json
+import os
 
-app = Flask(__name__)
+# Load dataset if exists, else create sample data
+DATA_FILE = "dataset.json"
 
-# Mock dataset
-projects = [
-    {"id": 1, "name": "Library Management System", "model": "Waterfall", "status": "Completed"},
-    {"id": 2, "name": "E-commerce Website", "model": "Agile", "status": "In Progress"},
-    {"id": 3, "name": "Hospital Management System", "model": "DevOps", "status": "Planning"}
-]
+if os.path.exists(DATA_FILE):
+    with open(DATA_FILE, "r") as f:
+        projects = json.load(f)
+else:
+    projects = [
+        {"id": 1, "name": "Library Management System", "model": "Waterfall", "status": "Completed"},
+        {"id": 2, "name": "E-commerce Website", "model": "Agile", "status": "In Progress"},
+        {"id": 3, "name": "Hospital Management System", "model": "DevOps", "status": "Planning"}
+    ]
 
-@app.route('/')
-def home():
-    return jsonify({"message": "Welcome to Software Engineering Project API!"})
+# Title
+st.title("📌 Software Engineering Project Manager")
 
-@app.route('/projects', methods=['GET'])
-def get_projects():
-    return jsonify(projects)
+# Display projects
+st.subheader("All Projects")
+st.table(projects)
 
-@app.route('/projects/<int:project_id>', methods=['GET'])
-def get_project(project_id):
-    project = next((p for p in projects if p["id"] == project_id), None)
-    if project:
-        return jsonify(project)
-    return jsonify({"error": "Project not found"}), 404
+# Add new project
+st.subheader("➕ Add New Project")
+with st.form("add_project_form"):
+    name = st.text_input("Project Name")
+    model = st.selectbox("Model", ["Waterfall", "Agile", "DevOps"])
+    status = st.selectbox("Status", ["Planning", "In Progress", "Completed"])
+    submitted = st.form_submit_button("Add Project")
 
-@app.route('/projects', methods=['POST'])
-def add_project():
-    new_project = request.json
-    new_project["id"] = len(projects) + 1
-    projects.append(new_project)
-    return jsonify(new_project), 201
+    if submitted:
+        new_id = max([p["id"] for p in projects]) + 1 if projects else 1
+        new_project = {"id": new_id, "name": name, "model": model, "status": status}
+        projects.append(new_project)
 
-@app.route('/projects/<int:project_id>', methods=['PUT'])
-def update_project(project_id):
-    project = next((p for p in projects if p["id"] == project_id), None)
-    if not project:
-        return jsonify({"error": "Project not found"}), 404
+        # Save updated dataset
+        with open(DATA_FILE, "w") as f:
+            json.dump(projects, f, indent=4)
 
-    data = request.json
-    project.update(data)
-    return jsonify(project)
+        st.success(f"✅ Project '{name}' added successfully!")
 
-@app.route('/projects/<int:project_id>', methods=['DELETE'])
-def delete_project(project_id):
-    global projects
-    projects = [p for p in projects if p["id"] != project_id]
-    return jsonify({"message": "Project deleted"})
+# Update project status
+st.subheader("✏️ Update Project Status")
+project_ids = [p["id"] for p in projects]
+if project_ids:
+    selected_id = st.selectbox("Select Project ID", project_ids)
+    new_status = st.selectbox("New Status", ["Planning", "In Progress", "Completed"])
+    if st.button("Update Status"):
+        for p in projects:
+            if p["id"] == selected_id:
+                p["status"] = new_status
+        with open(DATA_FILE, "w") as f:
+            json.dump(projects, f, indent=4)
+        st.success(f"✅ Project {selected_id} updated to '{new_status}'!")
 
-# ✅ Run the app safely
-if __name__ == "__main__":
-    app.run(debug=True)
+# Delete project
+st.subheader("🗑️ Delete Project")
+if project_ids:
+    delete_id = st.selectbox("Select Project ID to Delete", project_ids, key="delete")
+    if st.button("Delete Project"):
+        projects = [p for p in projects if p["id"] != delete_id]
+        with open(DATA_FILE, "w") as f:
+            json.dump(projects, f, indent=4)
+        st.error(f"❌ Project {delete_id} deleted!")
