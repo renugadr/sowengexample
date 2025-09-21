@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "name": "Library Management System",
+        "model": "Waterfall",
+        "status": "Completed"
+    },
+    {
+        "id": 2,
+        "name": "E-commerce Website",
+        "model": "Agile",
+        "status": "In Progress"
+    },
+    {
+        "id": 3,
+        "name": "Hospital Management System",
+        "model": "DevOps",
+        "status": "Planning"
+    }
+]
